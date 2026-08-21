@@ -228,9 +228,10 @@ export async function installFromGithub(params: InstallFromGithubParams): Promis
   log.info(`» installing ${params.owner}/${params.repo} from GitHub releases...`);
 
   // fetch release from GitHub API (pinned tag or latest)
+  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
   const releaseUrl = params.tag
-    ? `https://api.github.com/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
-    : `https://api.github.com/repos/${params.owner}/${params.repo}/releases/latest`;
+    ? `${apiBase}/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
+    : `${apiBase}/repos/${params.owner}/${params.repo}/releases/latest`;
   log.debug(`» fetching release from ${releaseUrl}...`);
 
   const headers: Record<string, string> = {};
@@ -312,9 +313,10 @@ export async function installFromGithubTarball(
   const assetName = params.assetNamePattern.replace("{os}", os).replace("{arch}", arch);
 
   // fetch release from GitHub API (pinned tag or latest)
+  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
   const releaseUrl = params.tag
-    ? `https://api.github.com/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
-    : `https://api.github.com/repos/${params.owner}/${params.repo}/releases/latest`;
+    ? `${apiBase}/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
+    : `${apiBase}/repos/${params.owner}/${params.repo}/releases/latest`;
   log.info(`» fetching release from ${releaseUrl}...`);
 
   const headers: Record<string, string> = {};

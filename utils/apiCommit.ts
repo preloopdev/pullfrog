@@ -16,7 +16,7 @@ import { $ } from "./shell.ts";
  * normalization apply exactly as a local `git commit` would.
  */
 
-const GITHUB_API = "https://api.github.com";
+const GITHUB_API = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
 
 /** undocumented create-blob ceiling is ~40MiB per prior art
  * (IAreKyleW00t/verified-bot-commit); refuse before uploading so the agent

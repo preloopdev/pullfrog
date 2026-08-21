@@ -65,7 +65,8 @@ async function downloadAsset(
   // only github.com itself needs the installation token; the githubusercontent CDN
   // urls carry their own signature. `redirect: "follow"` (undici default) strips the
   // Authorization header on cross-origin hops, so the token never reaches S3/the CDN.
-  const needsAuth = new URL(url).hostname === "github.com";
+  const githubHost = (() => { try { return new URL(process.env.GITHUB_SERVER_URL || "https://github.com").hostname; } catch { return "github.com"; } })();
+  const needsAuth = new URL(url).hostname === githubHost;
 
   try {
     // unbounded, this fetch runs once per asset per comment inside

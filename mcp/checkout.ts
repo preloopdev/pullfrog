@@ -584,7 +584,8 @@ export async function checkoutPrBranch(
   if (isFork) {
     const remoteName = `pr-${pr.number}`;
     // SECURITY: fork URL without token - auth is injected via GIT_ASKPASS in $git()
-    const forkUrl = `https://github.com/${pr.headRepoFullName}.git`;
+    const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+    const forkUrl = `${serverUrl}/${pr.headRepoFullName}.git`;
 
     // add fork as a named remote (suppress logging to avoid "error: remote already exists" spam)
     try {
@@ -625,7 +626,8 @@ export async function checkoutPrBranch(
   // update repo state
   repoState.issueNumber = pr.number;
   if (isFork) {
-    repoState.pushUrl = `https://github.com/${pr.headRepoFullName}.git`;
+    const serverUrl2 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+    repoState.pushUrl = `${serverUrl2}/${pr.headRepoFullName}.git`;
   }
 
   // store push destination so push_branch can use it directly

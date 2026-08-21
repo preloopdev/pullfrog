@@ -128,9 +128,13 @@ export function setupTestRepo(options: SetupOptions): void {
     if (!token) {
       throw new Error("GITHUB_TOKEN or GH_TOKEN is required for https clone in ci or docker");
     }
-    $("git", ["clone", `https://x-access-token:${token}@github.com/${repo}.git`, tempDir]);
+    const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+    const serverHost = (() => { try { return new URL(serverUrl).host; } catch { return "github.com"; } })();
+    $("git", ["clone", `https://x-access-token:${token}@${serverHost}/${repo}.git`, tempDir]);
   } else {
-    $("git", ["clone", `git@github.com:${repo}.git`, tempDir]);
+    const serverUrl2 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+    const serverHost2 = (() => { try { return new URL(serverUrl2).host; } catch { return "github.com"; } })();
+    $("git", ["clone", `git@${serverHost2}:${repo}.git`, tempDir]);
   }
 }
 
@@ -313,7 +317,9 @@ export async function configureRepoGit(params: ConfigureRepoGitParams): Promise<
   // 2. setup authentication
   // remove existing git auth headers that actions/checkout might have set
   try {
-    execSync("git config --local --unset-all http.https://github.com/.extraheader", {
+    const serverUrl4 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+    const serverHost4 = (() => { try { return new URL(serverUrl4).host; } catch { return "github.com"; } })();
+    execSync(`git config --local --unset-all http.https://${serverHost4}/.extraheader`, {
       cwd: repoDir,
       stdio: "pipe",
     });
@@ -330,7 +336,8 @@ export async function configureRepoGit(params: ConfigureRepoGitParams): Promise<
 
   // SECURITY: set origin URL without token - auth is injected via GIT_ASKPASS
   // in $git() calls. this prevents token leakage to git hooks and subprocesses.
-  const originUrl = `https://github.com/${params.owner}/${params.name}.git`;
+  const serverUrl3 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+  const originUrl = `${serverUrl3}/${params.owner}/${params.name}.git`;
   $("git", ["remote", "set-url", "origin", originUrl], { cwd: repoDir });
 
   // `set-url` writes remote.origin.url only, but push_branch reads `get-url --push`, which

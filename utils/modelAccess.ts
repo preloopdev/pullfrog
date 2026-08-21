@@ -112,7 +112,8 @@ export function buildModelAccessError(input: {
   name: string;
 }): string {
   const settingsUrl = `${getApiUrl()}/console/${input.owner}/${input.name}`;
-  const secretsUrl = `https://github.com/${input.owner}/${input.name}/settings/secrets/actions`;
+  const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+  const secretsUrl = `${serverUrl}/${input.owner}/${input.name}/settings/secrets/actions`;
   const docsUrl = "https://docs.pullfrog.com/keys";
 
   const headline = `**The ${MODEL_ACCESS_MARKER}: \`${input.model}\`.**`;

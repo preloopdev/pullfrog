@@ -45,7 +45,7 @@ export async function reportStatusChecks(
 
   const conclusion = params.runSucceeded ? "success" : "failure";
   const detailsUrl = ctx.runId
-    ? `https://github.com/${ctx.repo.owner}/${ctx.repo.name}/actions/runs/${ctx.runId}`
+    ? `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${ctx.repo.owner}/${ctx.repo.name}/actions/runs/${ctx.runId}`
     : undefined;
 
   if (checkRunId !== undefined) {

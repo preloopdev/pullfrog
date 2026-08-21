@@ -154,7 +154,8 @@ export function validateTagName(tag: string): void {
  * which is mutable git config an agent could rename.
  */
 function pushesToBaseRepo(ctx: ToolContext): boolean {
-  const baseUrl = `https://github.com/${ctx.repo.owner}/${ctx.repo.name}.git`;
+  const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+  const baseUrl = `${serverUrl}/${ctx.repo.owner}/${ctx.repo.name}.git`;
   return normalizeUrl(primaryRepoState(ctx.toolState).pushUrl ?? "") === normalizeUrl(baseUrl);
 }
 
