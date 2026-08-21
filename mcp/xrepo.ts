@@ -122,7 +122,8 @@ export function CheckoutRepoTool(ctx: ToolContext) {
         const info = await rc.octokit.rest.repos.get({ owner, repo });
         const defaultBranch = info.data.default_branch;
         state.defaultBranch = defaultBranch;
-        const url = `https://github.com/${owner}/${repo}.git`;
+        const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
+        const url = `${serverUrl}/${owner}/${repo}.git`;
 
         $("git", ["init", "-q"], { cwd: dir });
         $("git", ["remote", "add", "origin", url], { cwd: dir });

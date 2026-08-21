@@ -45,7 +45,8 @@ export type GitAuthServer = {
 };
 
 function revokeGitHubToken(token: string): void {
-  fetch("https://api.github.com/installation/token", {
+  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
+  fetch(`${apiBase}/installation/token`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,

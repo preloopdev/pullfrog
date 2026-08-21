@@ -63,7 +63,8 @@ async function ghApi<T = unknown>(path: string, token: string): Promise<GhApiRes
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const response = await fetch(`https://api.github.com${path}`, {
+    const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
+    const response = await fetch(`${apiBase}${path}`, {
       headers: {
         authorization: `Bearer ${token}`,
         accept: "application/vnd.github+json",
@@ -192,8 +193,8 @@ async function fetchStatus(ctx: {
 
 function installationConfigUrl(ctx: { owner: string; installationId: number; isOrg: boolean }) {
   return ctx.isOrg
-    ? `https://github.com/organizations/${ctx.owner}/settings/installations/${ctx.installationId}`
-    : `https://github.com/settings/installations/${ctx.installationId}`;
+    ? `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/organizations/${ctx.owner}/settings/installations/${ctx.installationId}`
+    : `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/settings/installations/${ctx.installationId}`;
 }
 
 /**
@@ -213,7 +214,7 @@ function consoleUrl(ctx: { owner: string; repo: string }) {
  */
 function installUrl(ctx: { appSlug: string; owner: string; repo: string }) {
   const state = encodeURIComponent(`cli:${ctx.owner}/${ctx.repo}`);
-  return `https://github.com/apps/${ctx.appSlug}/installations/select_target?state=${state}`;
+  return `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/apps/${ctx.appSlug}/installations/select_target?state=${state}`;
 }
 
 function printLink(url: string) {
