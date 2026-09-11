@@ -2,18 +2,24 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { log } from "./cli.ts";
+import { githubServerHostname, escapeRegex } from "./githubUrls.ts";
 
 // github image hosts that appear in issue/PR/review/comment markdown.
-//  - github.com/user-attachments/assets/... and github.com/<owner>/<repo>/assets/...
+//  - <configured-server>/user-attachments/assets/... and <configured-server>/<owner>/<repo>/assets/...
 //    are the raw urls present in *unrendered* bodies (the MCP tools return these);
 //    fetching them needs the installation token.
 //  - {private-user-images,user-images,camo}.githubusercontent.com/... are the signed
 //    urls produced by body_html→turndown (see resolveBody); they self-authenticate via
 //    a jwt/signature in the query string and must be fetched WITHOUT an Authorization
 //    header (sending the token to the CDN would leak it).
-const ASSET_HOST = String.raw`(?:github\.com\/(?:user-attachments\/assets|[^/\s]+\/[^/\s]+\/assets)\/|(?:private-user-images|user-images|camo)\.githubusercontent\.com\/)`;
-const MARKDOWN_IMAGE = new RegExp(String.raw`!\[[^\]]*\]\((https:\/\/${ASSET_HOST}[^\s"')]+)`, "g");
-const HTML_IMAGE = new RegExp(String.raw`<img[^>]+src=["'](https:\/\/${ASSET_HOST}[^"'\s]+)`, "g");
+function assetPatterns(): { markdown: RegExp; html: RegExp } {
+  const serverHost = escapeRegex(githubServerHostname());
+  const assetHost = String.raw`(?:${serverHost}\/(?:user-attachments\/assets|[^/\s]+\/[^/\s]+\/assets)\/|(?:private-user-images|user-images|camo)\.githubusercontent\.com\/)`;
+  return {
+    markdown: new RegExp(String.raw`!\[[^\]]*\]\((https:\/\/${assetHost}[^\s"')]+)`, "g"),
+    html: new RegExp(String.raw`<img[^>]+src=["'](https:\/\/${assetHost}[^"'\s]+)`, "g"),
+  };
+}
 
 const ALLOWED_EXTENSIONS = new Set([
   ".png",
@@ -38,9 +44,10 @@ export async function downloadAssetsInMarkdown(
   tmpdir: string,
   githubToken: string
 ): Promise<string> {
+  const { markdown: markdownPattern, html: htmlPattern } = assetPatterns();
   const urls = new Set<string>();
-  for (const match of markdown.matchAll(MARKDOWN_IMAGE)) urls.add(match[1]);
-  for (const match of markdown.matchAll(HTML_IMAGE)) urls.add(match[1]);
+  for (const match of markdown.matchAll(markdownPattern)) urls.add(match[1]);
+  for (const match of markdown.matchAll(htmlPattern)) urls.add(match[1]);
 
   if (urls.size === 0) return markdown;
 
@@ -65,7 +72,7 @@ async function downloadAsset(
   // only github.com itself needs the installation token; the githubusercontent CDN
   // urls carry their own signature. `redirect: "follow"` (undici default) strips the
   // Authorization header on cross-origin hops, so the token never reaches S3/the CDN.
-  const needsAuth = new URL(url).hostname === "github.com";
+  const needsAuth = new URL(url).hostname === githubServerHostname();
 
   try {
     // unbounded, this fetch runs once per asset per comment inside

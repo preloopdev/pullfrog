@@ -23,6 +23,7 @@ import {
   resolveOpenRouterModel,
 } from "../models.ts";
 import { getApiUrl } from "./apiUrl.ts";
+import { githubServerUrl } from "./githubUrls.ts";
 
 export type ModelAccessReason = "oss" | "byok_no_key" | "router";
 
@@ -112,7 +113,7 @@ export function buildModelAccessError(input: {
   name: string;
 }): string {
   const settingsUrl = `${getApiUrl()}/console/${input.owner}/${input.name}`;
-  const secretsUrl = `https://github.com/${input.owner}/${input.name}/settings/secrets/actions`;
+  const secretsUrl = `${githubServerUrl()}/${input.owner}/${input.name}/settings/secrets/actions`;
   const docsUrl = "https://docs.pullfrog.com/keys";
 
   const headline = `**The ${MODEL_ACCESS_MARKER}: \`${input.model}\`.**`;

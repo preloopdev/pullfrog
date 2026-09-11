@@ -6,6 +6,7 @@ import { throttling } from "@octokit/plugin-throttling";
 import { Octokit } from "@octokit/rest";
 import * as yes from "../yes/index.ts";
 import { apiFetch } from "./apiFetch.ts";
+import { githubApiUrl } from "./githubUrls.ts";
 import { isGitHubActions } from "./globals.ts";
 
 /** OIDC audience for Pullfrog API token exchanges */
@@ -318,8 +319,7 @@ const githubRequest = async <T>(
   } = {}
 ): Promise<T> => {
   const { method = "GET", headers = {}, body } = options;
-
-  const url = `https://api.github.com${path}`;
+  const url = `${githubApiUrl()}${path}`;
   const requestHeaders = {
     Accept: "application/vnd.github.v3+json",
     "User-Agent": "Pullfrog-Installation-Token-Generator/1.0",
@@ -594,6 +594,7 @@ export function createOctokit(
   // auth is applied in the request hook below (not via the `auth` option) so a
   // refreshed token takes effect on the retry and all subsequent requests
   const octokit = new OctokitWithPlugins({
+    baseUrl: githubApiUrl(),
     throttle: {
       // `retryCount <= 2` bounds ATTEMPTS, not duration: an exhausted
       // installation bucket hands back a `retry-after` measured in minutes and
@@ -609,7 +610,6 @@ export function createOctokit(
       },
     },
   });
-
   const onResponse = (response: OctokitResponseShim) => {
     const resource = response.headers["x-ratelimit-resource"];
     if (!resource) {

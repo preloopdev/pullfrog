@@ -24,6 +24,7 @@ beforeEach(() => {
   for (const key of Object.keys(process.env)) {
     if (ENV_KEYS_TO_STRIP.some((re) => re.test(key))) delete process.env[key];
   }
+  process.env.GITHUB_SERVER_URL = "https://github.com";
 });
 
 afterEach(() => {

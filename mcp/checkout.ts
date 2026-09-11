@@ -10,6 +10,7 @@ import { countLines, createDiffCoverageState } from "../utils/diffCoverage.ts";
 import { $git, $gitFetchWithDeepen, DEEPEN_RETRY_DEPTH } from "../utils/gitAuth.ts";
 import { executeLifecycleHook } from "../utils/lifecycle.ts";
 import { computeIncrementalDiff } from "../utils/rangeDiff.ts";
+import { githubServerUrl } from "../utils/githubUrls.ts";
 import { $ } from "../utils/shell.ts";
 import * as yes from "../yes/index.ts";
 import { rejectIfLeadingDash } from "./git.ts";
@@ -584,7 +585,7 @@ export async function checkoutPrBranch(
   if (isFork) {
     const remoteName = `pr-${pr.number}`;
     // SECURITY: fork URL without token - auth is injected via GIT_ASKPASS in $git()
-    const forkUrl = `https://github.com/${pr.headRepoFullName}.git`;
+    const forkUrl = `${githubServerUrl()}/${pr.headRepoFullName}.git`;
 
     // add fork as a named remote (suppress logging to avoid "error: remote already exists" spam)
     try {
@@ -625,7 +626,7 @@ export async function checkoutPrBranch(
   // update repo state
   repoState.issueNumber = pr.number;
   if (isFork) {
-    repoState.pushUrl = `https://github.com/${pr.headRepoFullName}.git`;
+    repoState.pushUrl = `${githubServerUrl()}/${pr.headRepoFullName}.git`;
   }
 
   // store push destination so push_branch can use it directly
