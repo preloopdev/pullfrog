@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import { log } from "./cli.ts";
-
+import { githubApiUrl } from "./githubUrls.ts";
 export interface InstallFromNpmTarballParams {
   packageName: string;
   version: string;
@@ -228,10 +228,9 @@ export async function installFromGithub(params: InstallFromGithubParams): Promis
   log.info(`» installing ${params.owner}/${params.repo} from GitHub releases...`);
 
   // fetch release from GitHub API (pinned tag or latest)
-  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
   const releaseUrl = params.tag
-    ? `${apiBase}/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
-    : `${apiBase}/repos/${params.owner}/${params.repo}/releases/latest`;
+    ? `${githubApiUrl()}/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
+    : `${githubApiUrl()}/repos/${params.owner}/${params.repo}/releases/latest`;
   log.debug(`» fetching release from ${releaseUrl}...`);
 
   const headers: Record<string, string> = {};
@@ -313,10 +312,9 @@ export async function installFromGithubTarball(
   const assetName = params.assetNamePattern.replace("{os}", os).replace("{arch}", arch);
 
   // fetch release from GitHub API (pinned tag or latest)
-  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
   const releaseUrl = params.tag
-    ? `${apiBase}/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
-    : `${apiBase}/repos/${params.owner}/${params.repo}/releases/latest`;
+    ? `${githubApiUrl()}/repos/${params.owner}/${params.repo}/releases/tags/${params.tag}`
+    : `${githubApiUrl()}/repos/${params.owner}/${params.repo}/releases/latest`;
   log.info(`» fetching release from ${releaseUrl}...`);
 
   const headers: Record<string, string> = {};

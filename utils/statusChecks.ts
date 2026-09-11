@@ -2,6 +2,7 @@ import type { RestEndpointMethodTypes } from "@octokit/rest";
 import type { ToolContext } from "../mcp/server.ts";
 import { primaryRepoState } from "../toolState.ts";
 import { log } from "./cli.ts";
+import { githubServerUrl } from "./githubUrls.ts";
 import {
   APPROVAL_CHECK_NAME,
   createTerminalRunStatusCheck,
@@ -45,7 +46,7 @@ export async function reportStatusChecks(
 
   const conclusion = params.runSucceeded ? "success" : "failure";
   const detailsUrl = ctx.runId
-    ? `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${ctx.repo.owner}/${ctx.repo.name}/actions/runs/${ctx.runId}`
+    ? `${githubServerUrl()}/${ctx.repo.owner}/${ctx.repo.name}/actions/runs/${ctx.runId}`
     : undefined;
 
   if (checkRunId !== undefined) {

@@ -19,6 +19,7 @@ import {
 import { log } from "../utils/cli.ts";
 import { $git, $gitFetchWithDeepen, TRANSIENT_AUTH_PATTERNS } from "../utils/gitAuth.ts";
 import { executeLifecycleHook, type LifecycleHookFailure } from "../utils/lifecycle.ts";
+import { githubServerUrl } from "../utils/githubUrls.ts";
 import { $ } from "../utils/shell.ts";
 import { resolveRepoCtx } from "./resolveRepoCtx.ts";
 import type { ToolContext } from "./server.ts";
@@ -154,8 +155,7 @@ export function validateTagName(tag: string): void {
  * which is mutable git config an agent could rename.
  */
 function pushesToBaseRepo(ctx: ToolContext): boolean {
-  const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-  const baseUrl = `${serverUrl}/${ctx.repo.owner}/${ctx.repo.name}.git`;
+  const baseUrl = `${githubServerUrl()}/${ctx.repo.owner}/${ctx.repo.name}.git`;
   return normalizeUrl(primaryRepoState(ctx.toolState).pushUrl ?? "") === normalizeUrl(baseUrl);
 }
 

@@ -11,6 +11,7 @@ import {
   CLI_UPGRADE_MESSAGE,
   CliContractError,
 } from "../cliContract.ts";
+import { parseGitHubRemote } from "../utils/githubUrls.ts";
 
 export const PULLFROG_API_URL = (process.env.PULLFROG_API_URL || "https://pullfrog.com").replace(
   /\/+$/,
@@ -82,16 +83,14 @@ export function tryParseGitRemote(): { owner: string; repo: string } | null {
   } catch {
     return null;
   }
-  const match = url.match(/github\.com(?::\d+)?[:/]+([^/]+)\/(.+?)(?:\.git)?(?:\/)?$/);
-  if (!match) return null;
-  return { owner: match[1], repo: match[2] };
+  return parseGitHubRemote(url);
 }
 
-export function parseGitRemote(): { owner: string; repo: string } {
+export function parseGitRemote(
+  errorMessage = "not a git repository, no 'origin' remote, or the remote is not a github url."
+): { owner: string; repo: string } {
   const parsed = tryParseGitRemote();
-  if (!parsed) {
-    bail("not a git repository, no 'origin' remote, or the remote is not a github url.");
-  }
+  if (!parsed) bail(errorMessage);
   return parsed;
 }
 

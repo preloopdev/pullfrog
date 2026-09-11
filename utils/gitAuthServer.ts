@@ -19,7 +19,7 @@ import { writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { join } from "node:path";
 import { log } from "./cli.ts";
-
+import { githubApiUrl } from "./githubUrls.ts";
 type CodeState = "active" | "revoked";
 
 type CodeEntry = {
@@ -45,8 +45,7 @@ export type GitAuthServer = {
 };
 
 function revokeGitHubToken(token: string): void {
-  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
-  fetch(`${apiBase}/installation/token`, {
+  fetch(`${githubApiUrl()}/installation/token`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,

@@ -5,6 +5,7 @@ import {
   providers,
   resolveDisplayAlias,
 } from "../models.ts";
+import { githubServerUrl } from "./githubUrls.ts";
 
 export const PULLFROG_DIVIDER = "<!-- PULLFROG_DIVIDER_DO_NOT_REMOVE_PLZ -->";
 
@@ -192,8 +193,7 @@ export function buildPullfrogFooter(params: BuildPullfrogFooterParams): string {
   if (params.workflowRunUrl) {
     parts.push(`[View workflow run](${params.workflowRunUrl})`);
   } else if (params.workflowRun) {
-    const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-    const baseUrl = `${serverUrl}/${params.workflowRun.owner}/${params.workflowRun.repo}/actions/runs/${params.workflowRun.runId}`;
+    const baseUrl = `${githubServerUrl()}/${params.workflowRun.owner}/${params.workflowRun.repo}/actions/runs/${params.workflowRun.runId}`;
     const url = params.workflowRun.jobId ? `${baseUrl}/job/${params.workflowRun.jobId}` : baseUrl;
     parts.push(`[View workflow run](${url})`);
   }

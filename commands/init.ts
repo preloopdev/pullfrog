@@ -2,7 +2,8 @@ import { execFileSync } from "node:child_process";
 import * as p from "@clack/prompts";
 import arg from "arg";
 import pc from "picocolors";
-import { PULLFROG_API_URL, pullfrogApi } from "./_shared.ts";
+import { PULLFROG_API_URL, parseGitRemote, pullfrogApi } from "./_shared.ts";
+import { githubApiUrl, githubServerUrl } from "../utils/githubUrls.ts";
 
 function link(text: string, url: string): string {
   return `\x1b]8;;${url}\x07${text}\x1b]8;;\x07`;
@@ -59,8 +60,7 @@ async function ghApi<T = unknown>(path: string, token: string): Promise<GhApiRes
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
-    const response = await fetch(`${apiBase}${path}`, {
+    const response = await fetch(`${githubApiUrl()}${path}`, {
       headers: {
         authorization: `Bearer ${token}`,
         accept: "application/vnd.github+json",
@@ -83,18 +83,6 @@ async function ghApi<T = unknown>(path: string, token: string): Promise<GhApiRes
   }
 }
 
-function parseGitRemote(): { owner: string; repo: string } {
-  let url: string;
-  try {
-    url = execFileSync("git", ["remote", "get-url", "origin"], { encoding: "utf-8" }).trim();
-  } catch {
-    bail("not a git repository or no 'origin' remote found.");
-  }
-
-  const match = url.match(/github\.com(?::\d+)?[:/]+([^/]+)\/(.+?)(?:\.git)?(?:\/)?$/);
-  if (!match) bail(`could not parse github owner/repo from remote: ${url}`);
-  return { owner: match[1], repo: match[2] };
-}
 
 function openBrowser(url: string) {
   try {
@@ -169,8 +157,8 @@ async function fetchStatus(ctx: {
 
 function installationConfigUrl(ctx: { owner: string; installationId: number; isOrg: boolean }) {
   return ctx.isOrg
-    ? `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/organizations/${ctx.owner}/settings/installations/${ctx.installationId}`
-    : `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/settings/installations/${ctx.installationId}`;
+    ? `${githubServerUrl()}/organizations/${ctx.owner}/settings/installations/${ctx.installationId}`
+    : `${githubServerUrl()}/settings/installations/${ctx.installationId}`;
 }
 
 /**
@@ -190,7 +178,7 @@ function consoleUrl(ctx: { owner: string; repo: string }) {
  */
 function installUrl(ctx: { appSlug: string; owner: string; repo: string }) {
   const state = encodeURIComponent(`cli:${ctx.owner}/${ctx.repo}`);
-  return `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/apps/${ctx.appSlug}/installations/select_target?state=${state}`;
+  return `${githubServerUrl()}/apps/${ctx.appSlug}/installations/select_target?state=${state}`;
 }
 
 function printLink(url: string) {
@@ -233,7 +221,7 @@ async function main() {
 
   // 2. detect repo
   spin.start("detecting repository");
-  const remote = parseGitRemote();
+  const remote = parseGitRemote("not a git repository or no 'origin' remote found.");
   spin.stop(`detected repo ${pc.cyan(`${remote.owner}/${remote.repo}`)}`);
 
   // 3. ensure the app is installed, then hand off to the console — every

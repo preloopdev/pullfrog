@@ -19,6 +19,7 @@ import {
   VERTEX_MODEL_ID_ENV,
 } from "../models.ts";
 import { getApiUrl } from "./apiUrl.ts";
+import { githubServerUrl } from "./githubUrls.ts";
 import { getModelsFailure } from "./openCodeModels.ts";
 import {
   GOOGLE_CLOUD_PROJECT_ENV,
@@ -197,7 +198,7 @@ function buildMissingApiKeyError(params: {
   name: string;
   model?: string | undefined;
 }): string {
-  const githubSecretsUrl = `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions`;
+  const githubSecretsUrl = `${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions`;
   const settingsUrl = `${getApiUrl()}/console/${params.owner}/${params.name}`;
 
   const envVars = params.model?.includes("/") ? getModelEnvVars(params.model) : [];
@@ -224,7 +225,7 @@ function buildBedrockSetupError(params: {
   name: string;
   missing: string[];
 }): string {
-  const githubSecretsUrl = `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions`;
+  const githubSecretsUrl = `${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions`;
 
   return `Bedrock model ${BYOK_CONFIG_MARKER} ${params.missing.join(", ")}.
 
@@ -240,7 +241,7 @@ for full setup instructions, see https://docs.pullfrog.com/bedrock`;
 }
 
 function buildVertexSetupError(params: { owner: string; name: string; missing: string[] }): string {
-  const githubSecretsUrl = `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions`;
+  const githubSecretsUrl = `${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions`;
 
   return `Google Vertex AI model ${BYOK_CONFIG_MARKER} ${params.missing.join(", ")}.
 
@@ -259,7 +260,7 @@ function buildOpenAICompatibleSetupError(params: {
   name: string;
   missing: string[];
 }): string {
-  const githubSecretsUrl = `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions`;
+  const githubSecretsUrl = `${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions`;
 
   return `OpenAI-compatible model ${BYOK_CONFIG_MARKER} ${params.missing.join(", ")}.
 
@@ -280,7 +281,7 @@ for full setup instructions, see https://docs.pullfrog.com/openai-compatible`;
 }
 
 function buildAzureSetupError(params: { owner: string; name: string; missing: string[] }): string {
-  const githubSecretsUrl = `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions`;
+  const githubSecretsUrl = `${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions`;
 
   return `Azure OpenAI ${BYOK_CONFIG_MARKER} ${params.missing.join(", ")}.
 
@@ -774,7 +775,7 @@ export function buildRejectedCredentialError(params: {
 
   const where = params.inPullfrogStore
     ? `[Update it in Pullfrog →](${settingsUrl})`
-    : `[Update the GitHub Actions secret →](${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions)`;
+    : `[Update the GitHub Actions secret →](${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions)`;
 
   return [
     `**Your \`${params.credential}\` ${CREDENTIAL_REJECTED_MARKER}**${detail}, so the agent never ran.`,
@@ -804,7 +805,7 @@ export function formatApiKeyErrorSummary(params: {
     return buildMissingApiKeyError({ owner: params.owner, name: params.name });
   }
 
-  const githubSecretsUrl = `${(process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "")}/${params.owner}/${params.name}/settings/secrets/actions`;
+  const githubSecretsUrl = `${githubServerUrl()}/${params.owner}/${params.name}/settings/secrets/actions`;
   const settingsUrl = `${getApiUrl()}/console/${params.owner}/${params.name}`;
 
   // the subscription hit its usage cap. checked before every credential branch

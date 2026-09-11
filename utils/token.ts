@@ -5,6 +5,7 @@ import { log } from "./cli.ts";
 import { onExitSignal } from "./exitHandler.ts";
 import { acquireNewToken, type OidcCredentials } from "./github.ts";
 import { isGitHubActions } from "./globals.ts";
+import { githubApiUrl } from "./githubUrls.ts";
 import { formatPermissions, mirrorRolePermissions } from "./roleMirror.ts";
 
 // re-export for `pullfrog gha token` subcommand
@@ -374,7 +375,7 @@ export function getGitHubInstallationToken(): string {
 }
 
 export async function revokeGitHubInstallationToken(token: string): Promise<void> {
-  const apiUrl = process.env.GITHUB_API_URL || "https://api.github.com";
+  const apiUrl = githubApiUrl();
 
   try {
     await fetch(`${apiUrl}/installation/token`, {

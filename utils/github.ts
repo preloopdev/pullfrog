@@ -6,6 +6,7 @@ import { throttling } from "@octokit/plugin-throttling";
 import { Octokit } from "@octokit/rest";
 import * as yes from "../yes/index.ts";
 import { apiFetch } from "./apiFetch.ts";
+import { githubApiUrl } from "./githubUrls.ts";
 import { isGitHubActions } from "./globals.ts";
 
 /** OIDC audience for Pullfrog API token exchanges */
@@ -318,9 +319,7 @@ const githubRequest = async <T>(
   } = {}
 ): Promise<T> => {
   const { method = "GET", headers = {}, body } = options;
-
-  const apiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
-  const url = `${apiBase}${path}`;
+  const url = `${githubApiUrl()}${path}`;
   const requestHeaders = {
     Accept: "application/vnd.github.v3+json",
     "User-Agent": "Pullfrog-Installation-Token-Generator/1.0",
@@ -592,12 +591,10 @@ export function createOctokit(
   // `OctokitWithPlugins` initialization based on https://github.com/actions/toolkit/blob/2506e78e82fbd2f9e94d63e75f5309118c8de1b1/packages/github/src/github.ts#L15-L22
   // we can't use it directly because it's stuck on `@octokit/core@v5` and we use the hottest `@octokit/core@v7`
   const OctokitWithPlugins = Octokit.plugin(throttling);
-  // GHES support: respect GITHUB_API_URL when running against preloop GHES or enterprise.
-  const githubApiBase = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
   // auth is applied in the request hook below (not via the `auth` option) so a
   // refreshed token takes effect on the retry and all subsequent requests
   const octokit = new OctokitWithPlugins({
-    baseUrl: githubApiBase,
+    baseUrl: githubApiUrl(),
     throttle: {
       // `retryCount <= 2` bounds ATTEMPTS, not duration: an exhausted
       // installation bucket hands back a `retry-after` measured in minutes and
@@ -613,7 +610,6 @@ export function createOctokit(
       },
     },
   });
-
   const onResponse = (response: OctokitResponseShim) => {
     const resource = response.headers["x-ratelimit-resource"];
     if (!resource) {

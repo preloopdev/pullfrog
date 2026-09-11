@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { lstat, readlink } from "node:fs/promises";
 import { join } from "node:path";
 import { log } from "./cli.ts";
+import { githubApiUrl } from "./githubUrls.ts";
 import { $ } from "./shell.ts";
 
 /**
@@ -16,7 +17,6 @@ import { $ } from "./shell.ts";
  * normalization apply exactly as a local `git commit` would.
  */
 
-const GITHUB_API = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/+$/, "");
 
 /** undocumented create-blob ceiling is ~40MiB per prior art
  * (IAreKyleW00t/verified-bot-commit); refuse before uploading so the agent
@@ -40,7 +40,7 @@ async function gh(params: {
   path: string;
   body?: unknown;
 }): Promise<{ status: number; json: unknown }> {
-  const response = await fetch(`${GITHUB_API}${params.path}`, {
+  const response = await fetch(`${githubApiUrl()}${params.path}`, {
     method: params.method,
     headers: {
       Accept: "application/vnd.github+json",

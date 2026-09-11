@@ -6,6 +6,7 @@ import type { ShellPermission } from "../external.ts";
 import { requireRepoState, type ToolState } from "../toolState.ts";
 import { log } from "./cli.ts";
 import type { OctokitWithPlugins } from "./github.ts";
+import { githubServerHost, githubServerUrl } from "./githubUrls.ts";
 import { isInsideDocker } from "./globals.ts";
 import { $ } from "./shell.ts";
 
@@ -121,20 +122,16 @@ export function setupTestRepo(options: SetupOptions): void {
   const repo = process.env.GITHUB_REPOSITORY;
   if (!repo) throw new Error("GITHUB_REPOSITORY is required");
   log.info(`» cloning ${repo} into ${tempDir}...`);
-
+  const serverHost = githubServerHost();
   // use https with token in ci or when running inside docker
   if (process.env.CI || isInsideDocker) {
     const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
     if (!token) {
       throw new Error("GITHUB_TOKEN or GH_TOKEN is required for https clone in ci or docker");
     }
-    const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-    const serverHost = (() => { try { return new URL(serverUrl).host; } catch { return "github.com"; } })();
     $("git", ["clone", `https://x-access-token:${token}@${serverHost}/${repo}.git`, tempDir]);
   } else {
-    const serverUrl2 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-    const serverHost2 = (() => { try { return new URL(serverUrl2).host; } catch { return "github.com"; } })();
-    $("git", ["clone", `git@${serverHost2}:${repo}.git`, tempDir]);
+    $("git", ["clone", `git@${serverHost}:${repo}.git`, tempDir]);
   }
 }
 
@@ -317,9 +314,7 @@ export async function configureRepoGit(params: ConfigureRepoGitParams): Promise<
   // 2. setup authentication
   // remove existing git auth headers that actions/checkout might have set
   try {
-    const serverUrl4 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-    const serverHost4 = (() => { try { return new URL(serverUrl4).host; } catch { return "github.com"; } })();
-    execSync(`git config --local --unset-all http.https://${serverHost4}/.extraheader`, {
+    execSync(`git config --local --unset-all http.https://${githubServerHost()}/.extraheader`, {
       cwd: repoDir,
       stdio: "pipe",
     });
@@ -336,8 +331,7 @@ export async function configureRepoGit(params: ConfigureRepoGitParams): Promise<
 
   // SECURITY: set origin URL without token - auth is injected via GIT_ASKPASS
   // in $git() calls. this prevents token leakage to git hooks and subprocesses.
-  const serverUrl3 = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-  const originUrl = `${serverUrl3}/${params.owner}/${params.name}.git`;
+  const originUrl = `${githubServerUrl()}/${params.owner}/${params.name}.git`;
   $("git", ["remote", "set-url", "origin", originUrl], { cwd: repoDir });
 
   // `set-url` writes remote.origin.url only, but push_branch reads `get-url --push`, which

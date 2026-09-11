@@ -5,6 +5,7 @@ import { ensureRepoState, type RepoAccess, repoKey } from "../toolState.ts";
 import { log } from "../utils/cli.ts";
 import { $git } from "../utils/gitAuth.ts";
 import { configureRepoGit } from "../utils/setup.ts";
+import { githubServerUrl } from "../utils/githubUrls.ts";
 import { $ } from "../utils/shell.ts";
 import { resolveRepoCtx } from "./resolveRepoCtx.ts";
 import type { ToolContext } from "./server.ts";
@@ -122,8 +123,7 @@ export function CheckoutRepoTool(ctx: ToolContext) {
         const info = await rc.octokit.rest.repos.get({ owner, repo });
         const defaultBranch = info.data.default_branch;
         state.defaultBranch = defaultBranch;
-        const serverUrl = (process.env.GITHUB_SERVER_URL || "https://github.com").replace(/\/+$/, "");
-        const url = `${serverUrl}/${owner}/${repo}.git`;
+        const url = `${githubServerUrl()}/${owner}/${repo}.git`;
 
         $("git", ["init", "-q"], { cwd: dir });
         $("git", ["remote", "add", "origin", url], { cwd: dir });

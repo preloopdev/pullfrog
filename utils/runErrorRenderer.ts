@@ -76,6 +76,7 @@ import {
   SECRETS_UNAVAILABLE_MARKER,
 } from "./apiKeys.ts";
 import { getApiUrl } from "./apiUrl.ts";
+import { githubServerUrl } from "./githubUrls.ts";
 import { BillingError, formatBillingErrorSummary } from "./billingErrors.ts";
 import { MODEL_ACCESS_MARKER } from "./modelAccess.ts";
 import {
@@ -185,8 +186,7 @@ function formatGenericFailure(errorMessage: string): string {
 function formatMinimalFailureComment(repo: { owner: string; name: string }): string {
   const runId = process.env.GITHUB_RUN_ID;
   if (!runId) return "**Run failed.**";
-  const server = process.env.GITHUB_SERVER_URL ?? "https://github.com";
-  const url = `${server}/${repo.owner}/${repo.name}/actions/runs/${runId}`;
+  const url = `${githubServerUrl()}/${repo.owner}/${repo.name}/actions/runs/${runId}`;
   return `**Run failed.** [View the logs →](${url})`;
 }
 
